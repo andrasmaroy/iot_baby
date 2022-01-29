@@ -1,0 +1,4 @@
+[Desktop Entry]
+Type=Application
+Name=Serial Plotter
+Exec="/home/pi/iot_baby/iot_baby.py"

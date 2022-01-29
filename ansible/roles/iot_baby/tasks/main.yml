@@ -1,0 +1,75 @@
+---
+
+- name: Set raspi-config value
+  lineinfile:
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    path: /boot/config.txt
+  with_items:
+    - { regexp: '^.*hdmi_group.*$', line: 'hdmi_group=1' }
+    - { regexp: '^.*hdmi_mode.*$', line: 'hdmi_mode=3' }
+    - { regexp: '^.*hdmi_force_hotplug.*$', line: 'hdmi_force_hotplug=1' }
+    - { regexp: '^.*disable_overscan.*$', line: 'disable_overscan=1' }
+  notify: reboot
+
+- name: Disable screen sleep
+  lineinfile:
+    path: /etc/lightdm/lightdm.conf
+    line: "xserver-command=X -s 0 -dpms -nocursor"
+    insertafter: '^\[Seat:\*\]'
+
+- name: Disable menubar
+  lineinfile:
+    path: /etc/xdg/lxsession/LXDE-pi/autostart
+    line: "# @lxpanel --profile LXDE-pi"
+    regexp: "@lxpanel --profile LXDE-pi"
+
+- name: Install qt5
+  apt:
+    name: python3-pyqt5
+
+- name: Create service folders
+  file:
+    path: /home/pi/iot_baby
+    state: directory
+    owner: pi
+    group: pi
+
+- name: Copy requirements file
+  copy:
+    dest: /home/pi/iot_baby/
+    src: requirements.txt
+    owner: pi
+    group: pi
+  register: requirements_file
+
+- name: Install python dependencies
+  pip:
+    requirements: /home/pi/iot_baby/requirements.txt
+    executable: pip3
+  become: yes
+  become_user: pi
+  when: requirements_file.changed
+
+- name: Copy frontend script
+  copy:
+    src: iot_baby.py
+    dest: /home/pi/iot_baby/
+    mode: 0755
+    owner: pi
+    group: pi
+  notify: reboot
+
+- name: Create autostart folder
+  file:
+    path: /home/pi/.config/autostart
+    state: directory
+    owner: pi
+    group: pi
+
+- name: Create desktop file
+  copy:
+    src: serial-monitor.desktop
+    dest: /home/pi/.config/autostart/serial-monitor.desktop
+    owner: pi
+    group: pi
