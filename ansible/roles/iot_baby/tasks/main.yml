@@ -6,10 +6,10 @@
     line: "{{ item.line }}"
     path: /boot/config.txt
   with_items:
-    - { regexp: '^.*hdmi_group.*$', line: 'hdmi_group=1' }
-    - { regexp: '^.*hdmi_mode.*$', line: 'hdmi_mode=3' }
-    - { regexp: '^.*hdmi_force_hotplug.*$', line: 'hdmi_force_hotplug=1' }
-    - { regexp: '^.*disable_overscan.*$', line: 'disable_overscan=1' }
+    - {regexp: '^.*hdmi_group.*$', line: 'hdmi_group=1'}
+    - {regexp: '^.*hdmi_mode.*$', line: 'hdmi_mode=3'}
+    - {regexp: '^.*hdmi_force_hotplug.*$', line: 'hdmi_force_hotplug=1'}
+    - {regexp: '^.*disable_overscan.*$', line: 'disable_overscan=1'}
   notify: reboot
 
 - name: Disable screen sleep
@@ -34,6 +34,7 @@
     state: directory
     owner: pi
     group: pi
+    mode: 0755
 
 - name: Copy requirements file
   copy:
@@ -41,15 +42,16 @@
     src: requirements.txt
     owner: pi
     group: pi
+    mode: 0644
   register: requirements_file
 
 - name: Install python dependencies
   pip:
     requirements: /home/pi/iot_baby/requirements.txt
     executable: pip3
-  become: yes
+  become: true
   become_user: pi
-  when: requirements_file.changed
+  when: requirements_file.changed   # noqa: no-handler
 
 - name: Copy frontend script
   copy:
@@ -66,6 +68,7 @@
     state: directory
     owner: pi
     group: pi
+    mode: 0755
 
 - name: Create desktop file
   copy:
@@ -73,3 +76,4 @@
     dest: /home/pi/.config/autostart/serial-monitor.desktop
     owner: pi
     group: pi
+    mode: 0644
